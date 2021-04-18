@@ -1,6 +1,8 @@
 import os
 import shutil
 
+DirVerify = True
+
 def isQuant(dirName):
 	if("Math" in dirName):
 		return False
@@ -34,9 +36,11 @@ def buildFolderStructure(oldDir, newDir, QuesDir, AnsDir):
 		shutil.rmtree(AnsDir)
 	os.makedirs(AnsDir)
 	dirnames = get_immediate_subdirectories(oldDir)
+	counter=0
 	for dirname in dirnames:
 		root = os.path.join(oldDir, dirname)
 		filenames = get_files_directory(os.path.join(oldDir, dirname))
+		counter += len(filenames)
 		for filename in filenames:
 			newSubDir = ""
 			# copy file accordingly
@@ -51,22 +55,29 @@ def buildFolderStructure(oldDir, newDir, QuesDir, AnsDir):
 					os.makedirs(newSubDir)
 				shutil.copy2(os.path.join(root,filename), newSubDir)
 			print newSubDir
+	return counter
 
-def directoryParse(source):
+def directoryParse(source, Quant, Verbal, total):
 	print source
 	mainDirNames = get_immediate_subdirectories(source)
 	mainRoot = source
+	dirSize = len(mainDirNames)
+	boolArr = [False for i in range(dirSize)]
+	counter = 0
 	for dirName in mainDirNames:
+		# Quant difference
 		if(isQuant(dirName)):
+			boolArr[counter] = True
 			localQuesfolder = 'Math\\'+dirName+'\Question'
 			localAnsfolder = 'Math\\'+dirName+'\Answer'
 			oldDir = os.path.join(mainRoot, dirName)
 			newDir = os.path.join(mainRoot, 'Math\\'+dirName)
 			QuesDir = os.path.join(mainRoot, localQuesfolder)
 			AnsDir = os.path.join(mainRoot, localAnsfolder)
-			buildFolderStructure(oldDir, newDir, QuesDir, AnsDir)
+			Quant.append(buildFolderStructure(oldDir, newDir, QuesDir, AnsDir))
 		# verbal to-do
 		if(isVerbal(dirName)):
+			boolArr[counter] = True
 			localQuesfolder = 'Verbal\\'+dirName+'\Question'
 			localAnsfolder = 'Verbal\\'+dirName+'\Answer'
 			oldDir = os.path.join(mainRoot, dirName)
@@ -74,10 +85,23 @@ def directoryParse(source):
 			QuesDir = os.path.join(mainRoot, localQuesfolder)
 			AnsDir = os.path.join(mainRoot, localAnsfolder)
 			buildFolderStructure(oldDir, newDir, QuesDir, AnsDir)
+			Verbal.append(buildFolderStructure(oldDir, newDir, QuesDir, AnsDir))
+		counter += 1
+	for elem in boolArr:
+		if elem is False:
+			DirVerify = False
+			return
 
 def main():
-	path = "E:\Magoosh GRE Package 2020"
-	directoryParse(".\Magoosh GRE Package 2020")
+	Quant=[]
+	Verbal=[]
+	Total=[]
+	path = "E:\MS\GRE Prep Tool"
+	directoryParse(".\Magoosh GRE Package 2020", Quant, Verbal, Total)
+	if DirVerify is False:
+		print "Failed in Directory parsing itself!!"
+	else:
+		print "All are fine!!"
 
 if __name__ == '__main__':
 	main()
